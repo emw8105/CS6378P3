@@ -1,5 +1,5 @@
 # File system replication 
 
 **contributors**
-PJ Avinash
-Evan Wright
+- PJ Avinash
+- Evan Wright
