@@ -40,7 +40,7 @@ public class ServerProc {
 
 
     private Node hash(String key, int offset) {
-        int serverNum = Math.abs(key.hashCode()) % numServers; // need to change hash function to correlate the object to the server it belongs to
+        int serverNum = (Math.abs(key.hashCode()) + offset) % numServers; // need to change hash function to correlate the object to the server it belongs to
         Node server = serverMap.get(serverNum);
         if (server == null) {
             throw new RuntimeException("No server found for key: " + key);

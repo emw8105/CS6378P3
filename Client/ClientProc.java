@@ -64,7 +64,7 @@ public class ClientProc {
 
     // hash the key to determine which server to connect to
     private Node hash(String key, int offset) {
-        int serverNum = Math.abs(key.hashCode()) % numServers; // need to change hash function to correlate the object to the server it belongs to
+        int serverNum = (Math.abs(key.hashCode()) + offset) % numServers; // need to change hash function to correlate the object to the server it belongs to
         Node server = serverMap.get(serverNum);
         if (server == null) {
             throw new RuntimeException("No server found for key: " + key);
@@ -85,46 +85,47 @@ public class ClientProc {
         return new ObjectOutputStream(socket.getOutputStream());
     }
     
-    private BufferedReader getReader(Socket socket) throws IOException {
-        return new BufferedReader(new InputStreamReader(socket.getInputStream()));
+    private ObjectInputStream getReader(Socket socket) throws IOException {
+        return new ObjectInputStream(socket.getInputStream());
     }
 
-    public String sendReadRequest(Socket socket, String key) throws IOException {
-        String response = null;
-        int offset = 0;
-        while (offset < numServers) {
+    public String sendReadRequest(Socket socket, String key) throws IOException, ClassNotFoundException {
+        Message response = null;
+        int replica_try = 0;
+        while (replica_try < 3) {
             try {
-                Node destination = hash(key, offset); // hash the key to determine which server to connect to
+                Node destination = hash(key, replica_try*2); // hash the key to determine which server to connect to
                 connect(destination); // connect to the server that the key hashes to
                 ObjectOutputStream out = getWriter(socket);
-                BufferedReader in = getReader(socket);
+                ObjectInputStream in = getReader(socket);
                 Message message = new Message(uid, MessageType.CS_READ, key,"");
                 out.writeObject(message);
-                response = in.readLine(); // blocks until it receives a response or the timeout expires
+                response = (Message)in.readObject(); // blocks until it receives a response or the timeout expires
                 socket.close();
-                if (response != null && !response.contains("ERROR")) {
+                if (response != null && response.messageType == MessageType.POS_ACK) {
                     break; // if the response is not null and does not contain "ERROR", we have a successful response
                 }
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            offset += 2; // move to the next server in the hash sequence
+            replica_try += 1; // move to the next server in the hash sequence
         }
-        if (response == null || response.contains("ERROR")) {
+        if (response == null) {
             throw new RuntimeException("Unable to read the key: " + key);
         }
-        return response;
+        return response.value;
     }
 
-    public String sendWriteRequest(Socket socket, String key, String value) throws IOException {
+    public MessageType sendWriteRequest(Socket socket, String key, String value) throws IOException, ClassNotFoundException {
         Node destination = hash(key, 0); // hash the key to determine which server to connect to
         connect(destination); // connect to the server that the key hashes to
         ObjectOutputStream out = getWriter(socket);
-        BufferedReader in = getReader(socket);
+        ObjectInputStream in  = getReader(socket);
         Message message = new Message(uid, MessageType.CS_WRITE, key,value); // currently concatenating key and value
         out.writeObject(message);
-        String response = in.readLine(); // blocks until it receives a response
+        Message response = (Message)in.readObject(); // blocks until it receives a response
         socket.close();
-        return response;
+        return response.messageType;
     }
+    
 }
