@@ -1,4 +1,4 @@
-package CS6378P3;
+package CS6378P3.Client;
 // Need to implement contact list which will contain values corresponding to server connections
 /* servers.txt:
 
@@ -26,16 +26,17 @@ package CS6378P3;
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import CS6378P3.Commons.*;
 
-public class Client {
+public class ClientProc {
     private int uid;
     private String hostname;
     private int port;
-    private Map<Integer, ServerNode> serverMap;
+    private Map<Integer, Node> serverMap;
     private final int numServers = 7;
     private final String serverContactList = "servers.txt";
 
-    public Client(int uid, String hostname, int port) {
+    public ClientProc(int uid, String hostname, int port) {
         this.uid = uid;
         this.hostname = hostname;
         this.port = port;
@@ -47,24 +48,24 @@ public class Client {
         }
     }
 
-    public static Map<Integer, ServerNode> readServerDetailsFromFile(String filename) throws FileNotFoundException {
-        Map<Integer, ServerNode> serverMap = new HashMap<>();
+    public static Map<Integer, Node> readServerDetailsFromFile(String filename) throws FileNotFoundException {
+        Map<Integer, Node> serverMap = new HashMap<>();
         Scanner scanner = new Scanner(new File(filename));
         while (scanner.hasNextLine()) {
             String[] details = scanner.nextLine().split(" "); // format: serverNumber hostname port
             int serverNumber = Integer.parseInt(details[0]);
             String hostname = details[1];
             int port = Integer.parseInt(details[2]);
-            serverMap.put(serverNumber, new ServerNode(serverNumber, hostname, port));
+            serverMap.put(serverNumber, new Node(serverNumber, hostname, port));
         }
         scanner.close();
         return serverMap;
     }
 
     // hash the key to determine which server to connect to
-    private ServerNode hash(String key, int offset) {
+    private Node hash(String key, int offset) {
         int serverNum = Math.abs(key.hashCode()) % numServers; // need to change hash function to correlate the object to the server it belongs to
-        ServerNode server = serverMap.get(serverNum);
+        Node server = serverMap.get(serverNum);
         if (server == null) {
             throw new RuntimeException("No server found for key: " + key);
         }
@@ -72,7 +73,7 @@ public class Client {
     }
 
     // connect to the server that the key hashes to
-    private Socket connect(ServerNode server) throws IOException {
+    private Socket connect(Node server) throws IOException {
         System.out.println("Attempting to connect to " + server.hostname + ":" + server.port);
         Socket socket = new Socket(server.hostname, server.port);
         socket.setSoTimeout(1000); // set a timeout of 1 second
@@ -93,11 +94,11 @@ public class Client {
         int offset = 0;
         while (offset < numServers) {
             try {
-                ServerNode destination = hash(key, offset); // hash the key to determine which server to connect to
+                Node destination = hash(key, offset); // hash the key to determine which server to connect to
                 connect(destination); // connect to the server that the key hashes to
                 ObjectOutputStream out = getWriter(socket);
                 BufferedReader in = getReader(socket);
-                Message message = new Message(uid, MessageType.READ, key);
+                Message message = new Message(uid, MessageType.CS_READ, key,"");
                 out.writeObject(message);
                 response = in.readLine(); // blocks until it receives a response or the timeout expires
                 socket.close();
@@ -116,11 +117,11 @@ public class Client {
     }
 
     public String sendWriteRequest(Socket socket, String key, String value) throws IOException {
-        ServerNode destination = hash(key, 0); // hash the key to determine which server to connect to
+        Node destination = hash(key, 0); // hash the key to determine which server to connect to
         connect(destination); // connect to the server that the key hashes to
         ObjectOutputStream out = getWriter(socket);
         BufferedReader in = getReader(socket);
-        Message message = new Message(uid, MessageType.WRITE, key + " " + value); // currently concatenating key and value
+        Message message = new Message(uid, MessageType.CS_WRITE, key,value); // currently concatenating key and value
         out.writeObject(message);
         String response = in.readLine(); // blocks until it receives a response
         socket.close();
