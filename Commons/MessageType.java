@@ -9,4 +9,5 @@ public enum MessageType{
     ERROR,
     POS_ACK,
     NEG_ACK,
+    CS_PRINT,
 }

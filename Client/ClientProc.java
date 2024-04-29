@@ -32,7 +32,7 @@ public class ClientProc {
     private int uid;
     private String hostname;
     private int port;
-    private Map<Integer, Node> serverMap;
+    private Map<Integer, Node> serverMap = new HashMap<>();;
     private final int numServers = 7;
     private final String serverContactList = "servers.txt";
 
@@ -42,7 +42,7 @@ public class ClientProc {
         this.port = port;
         try {
             // this.hostname = InetAddress.getLocalHost().getHostName(); // hostname may be passed in as an argument instead
-            this.serverMap = readServerDetailsFromFile(serverContactList);
+            //this.serverMap = readServerDetailsFromFile(serverContactList);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -62,6 +62,18 @@ public class ClientProc {
         return serverMap;
     }
 
+    public void addServer(Node node) {
+        if ( serverMap.size() < numServers ){
+            serverMap.put(node.uid, node);
+        }
+    }
+    public int getuid(){
+        int r = this.uid;
+        return r;
+    }
+
+
+
     // hash the key to determine which server to connect to
     private Node hash(String key, int offset) {
         int serverNum = (Math.abs(key.hashCode()) + offset) % numServers; // need to change hash function to correlate the object to the server it belongs to
@@ -74,10 +86,10 @@ public class ClientProc {
 
     // connect to the server that the key hashes to
     private Socket connect(Node server) throws IOException {
-        System.out.println("Attempting to connect to " + server.hostname + ":" + server.port);
+        //System.out.println("Attempting to connect to " + server.hostname + ":" + server.port);
         Socket socket = new Socket(server.hostname, server.port);
-        socket.setSoTimeout(1000); // set a timeout of 1 second
-        System.out.println("Connection Established");
+        socket.setSoTimeout(10000); // set a timeout of 1 second
+        //System.out.println("Connection Established");
         return socket;
     }
 
@@ -89,13 +101,13 @@ public class ClientProc {
         return new ObjectInputStream(socket.getInputStream());
     }
 
-    public String sendReadRequest(Socket socket, String key) throws IOException, ClassNotFoundException {
+    public String get(String key) throws IOException, ClassNotFoundException {
         Message response = null;
         int replica_try = 0;
         while (replica_try < 3) {
             try {
                 Node destination = hash(key, replica_try*2); // hash the key to determine which server to connect to
-                connect(destination); // connect to the server that the key hashes to
+                Socket socket = connect(destination); // connect to the server that the key hashes to
                 ObjectOutputStream out = getWriter(socket);
                 ObjectInputStream in = getReader(socket);
                 Message message = new Message(uid, MessageType.CS_READ, key,"");
@@ -116,9 +128,9 @@ public class ClientProc {
         return response.value;
     }
 
-    public MessageType sendWriteRequest(Socket socket, String key, String value) throws IOException, ClassNotFoundException {
+    public MessageType set(String key, String value) throws IOException, ClassNotFoundException {
         Node destination = hash(key, 0); // hash the key to determine which server to connect to
-        connect(destination); // connect to the server that the key hashes to
+        Socket socket = connect(destination); // connect to the server that the key hashes to
         ObjectOutputStream out = getWriter(socket);
         ObjectInputStream in  = getReader(socket);
         Message message = new Message(uid, MessageType.CS_WRITE, key,value); // currently concatenating key and value
@@ -127,5 +139,5 @@ public class ClientProc {
         socket.close();
         return response.messageType;
     }
-    
+
 }

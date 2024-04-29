@@ -1,6 +1,8 @@
 package CS6378P3.Server;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -23,24 +25,25 @@ public class ServerProc {
     private Map<Integer, Node> serverMap;
     private String replicaPath;
     private final int numServers = 7;
+
     public ServerProc(int uid, String hostname, int port, String replicaFolder) {
         this.uid = uid;
         this.hostname = hostname;
         this.port = port;
-        this.replicaPath = replicaFolder + "/server_" + uid + ".dat"; 
+        this.replicaPath = replicaFolder + "/server_" + uid + ".dat";
         // Initialize serverMap with empty HashMap
         this.serverMap = new HashMap<>();
     }
 
     public void addServer(Node node) {
-        if ( serverMap.size() < numServers ){
+        if (serverMap.size() < numServers) {
             serverMap.put(node.uid, node);
         }
     }
 
-
     private Node hash(String key, int offset) {
-        int serverNum = (Math.abs(key.hashCode()) + offset) % numServers; // need to change hash function to correlate the object to the server it belongs to
+        int serverNum = (Math.abs(key.hashCode()) + offset) % numServers; // need to change hash function to correlate
+                                                                          // the object to the server it belongs to
         Node server = serverMap.get(serverNum);
         if (server == null) {
             throw new RuntimeException("No server found for key: " + key);
@@ -95,14 +98,13 @@ public class ServerProc {
         }
     }
 
-    
-
     // use 2 phase commit
-    public void handle_cs_write(Message inMessage, ObjectOutputStream objectOut) throws IOException, ClassNotFoundException {
+    public void handle_cs_write(Message inMessage, ObjectOutputStream objectOut)
+            throws IOException, ClassNotFoundException {
         // send write_prepare to 2 servers,
-        Message prepMessage = new Message(uid,MessageType.SS_WRITE_PREPARE,inMessage.key,inMessage.value);
-        Node server1 = hash(inMessage.key,2);
-        Node server2 = hash(inMessage.key,4);
+        Message prepMessage = new Message(uid, MessageType.SS_WRITE_PREPARE, inMessage.key, inMessage.value);
+        Node server1 = hash(inMessage.key, 2);
+        Node server2 = hash(inMessage.key, 4);
         Socket server_socket1 = new Socket(server1.hostname, server1.port);
         Socket server_socket2 = new Socket(server2.hostname, server2.port);
 
@@ -115,26 +117,27 @@ public class ServerProc {
         s1_outputstream.writeObject(prepMessage);
         s2_outputStream.writeObject(prepMessage);
 
-        Message s1_reply = (Message) s1_inputstream.readObject(); 
-        Message s2_reply = (Message) s2_inputstream.readObject(); 
+        Message s1_reply = (Message) s1_inputstream.readObject();
+        Message s2_reply = (Message) s2_inputstream.readObject();
 
-        Boolean commit = (s1_reply.messageType == MessageType.POS_ACK || s2_reply.messageType == MessageType.POS_ACK) ;
+        Boolean commit = (s1_reply.messageType == MessageType.POS_ACK || s2_reply.messageType == MessageType.POS_ACK);
         Message secondPhasMessage;
-        if(commit){
+        if (commit) {
             secondPhasMessage = new Message(uid, MessageType.SS_WRITE_COMMIT, inMessage.key, inMessage.value);
-        }else{
+        } else {
             secondPhasMessage = new Message(uid, MessageType.SS_WRITE_ABORT, inMessage.key, inMessage.value);
         }
         s1_outputstream.writeObject(secondPhasMessage);
         s2_outputStream.writeObject(secondPhasMessage);
-        s1_inputstream.readObject(); 
-        s2_inputstream.readObject(); 
+        s1_inputstream.readObject();
+        s2_inputstream.readObject();
 
         Boolean localSet = setKV(inMessage.key, inMessage.value);
         MessageType responseType;
-        if((localSet && commit) || (s1_reply.messageType == MessageType.POS_ACK && s2_reply.messageType == MessageType.POS_ACK)){
+        if ((localSet && commit)
+                || (s1_reply.messageType == MessageType.POS_ACK && s2_reply.messageType == MessageType.POS_ACK)) {
             responseType = MessageType.POS_ACK;
-        }else{
+        } else {
             responseType = MessageType.NEG_ACK;
         }
         objectOut.writeObject(new Message(uid, responseType, replicaPath, hostname));
@@ -142,7 +145,6 @@ public class ServerProc {
         server_socket2.close();
     }
 
-    
     public void handle_ss_write_commit(Message inMessage, ObjectOutputStream objectOut) throws IOException {
         Boolean writeSuccess = setKV(inMessage.key, inMessage.value);
         if (writeSuccess) {
@@ -152,18 +154,40 @@ public class ServerProc {
         }
     }
 
-    public void handle_ss_write_prepare(Message inMessage, ObjectInputStream objectIn, ObjectOutputStream objectOut) throws IOException, ClassNotFoundException {
-        Message commitOrAbort = (Message) objectIn.readObject(); // blocks until commit or abbort comes from requesting server
+    public void handle_ss_write_prepare(Message inMessage, ObjectInputStream objectIn, ObjectOutputStream objectOut)
+            throws IOException, ClassNotFoundException {
+        Message commitOrAbort = (Message) objectIn.readObject(); // blocks until commit or abbort comes from requesting
+                                                                 // server
         if (commitOrAbort.messageType == MessageType.SS_WRITE_COMMIT) {
-            handle_ss_write_commit(inMessage,objectOut);
+            handle_ss_write_commit(inMessage, objectOut);
         } else {
             objectOut.writeObject(new Message(uid, MessageType.POS_ACK, inMessage.key, inMessage.value));
         }
     }
 
-    
+    public void handle_cs_print(ObjectOutputStream objectOut) {
+        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream(replicaPath))) {
+            // Read the object from the file
+            Object obj = inputStream.readObject();
+            if (obj instanceof Map) {
+                // Cast the object to a Map<String, String> if it's of the correct type
+                @SuppressWarnings("unchecked")
+                Map<String, String> keyValueMap = (Map<String, String>) obj;
+                for (Map.Entry<String, String> entry : keyValueMap.entrySet()) {
+                    System.out.println(entry.getKey() + " : " + entry.getValue());
+                }
+                objectOut.writeObject(new Message(uid, MessageType.POS_ACK, "", ""));
+            } else {
+                System.err.println("Error: The object in the file is not a Map<String, String>.");
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            e.printStackTrace();
+        }
 
-    // this method gets invoked only for the new request (old regests get handled through read write streams )
+    }
+
+    // this method gets invoked only for the new request (old regests get handled
+    // through read write streams )
     public void handleRequest(Socket connectionReq) {
         try {
             ObjectOutputStream objectOut = new ObjectOutputStream(connectionReq.getOutputStream());
@@ -180,13 +204,16 @@ public class ServerProc {
                     handle_local_read(inMessage, objectOut);
                     break;
                 case SS_WRITE_PREPARE:
-                    handle_ss_write_prepare(inMessage,objectIn,objectOut);
+                    handle_ss_write_prepare(inMessage, objectIn, objectOut);
+                    break;
+                case CS_PRINT:
+                    handle_cs_print(objectOut);
                     break;
                 case SS_WRITE_COMMIT:
                     System.out.print("should not reach here");
                     break;
                 case SS_WRITE_ABORT:
-                    //should not reach here
+                    // should not reach here
                     System.out.print("should not reach here");
                     break;
                 case ERROR:
@@ -204,8 +231,7 @@ public class ServerProc {
             }
         } catch (Exception e) {
             e.printStackTrace();
-        }
-        finally {
+        } finally {
             try {
                 connectionReq.close();
             } catch (IOException e) {
@@ -241,7 +267,24 @@ public class ServerProc {
         }
     }
 
-    public Thread run(){
+    public Thread run() {
+        // setting up empty file
+        try {
+            File file = new File(replicaPath);
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            ObjectOutputStream outputStream;
+            outputStream = new ObjectOutputStream(new FileOutputStream(replicaPath));
+            Map<String, String> keyValueMap = new HashMap<>();
+            outputStream.writeObject(keyValueMap);
+            outputStream.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         Thread receiverThread = new Thread(() -> {
             try {
                 this.startListening();

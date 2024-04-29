@@ -1,4 +1,4 @@
-package CS6378P3;
+package CS6378P3.Server;
 
 import java.io.IOException;
 import java.net.InetAddress;
@@ -7,7 +7,6 @@ import java.util.List;
 
 import CS6378P3.Commons.ConfigReader;
 import CS6378P3.Commons.Node;
-import CS6378P3.Server.ServerProc;
 
 public class Main {
 
@@ -15,7 +14,7 @@ public class Main {
         String hostname = InetAddress.getLocalHost().getHostName();
         List<Node> hostnodes = nodes.stream().filter(t -> t.hostname.equals(hostname)).toList();
         List<ServerProc> hostSeverProcs = new ArrayList<ServerProc>();
-        String storageFolder = "CS6378P3/Storage";
+        String storageFolder = "/Storage";
         for (Node hn : hostnodes) {
             ServerProc sp = new ServerProc(hn.uid, hn.hostname, hn.port, storageFolder);
             for (Node n : nodes) {
@@ -35,9 +34,14 @@ public class Main {
         List<Node> nodes = ConfigReader.readConfigFile(filePath);
         try {
             List<Thread> serverThreads = spinHostServers(nodes);
+            Thread.sleep(10 * 60 * 1000); // 10 minutes in milliseconds
+            for (Thread thread : serverThreads) {
+                thread.interrupt();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
+
     }
 
 }
