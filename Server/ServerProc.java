@@ -270,6 +270,7 @@ public class ServerProc {
     public Thread run() {
         // setting up empty file
         try {
+            System.out.println(replicaPath);
             File file = new File(replicaPath);
             if (!file.exists()) {
                 file.createNewFile();

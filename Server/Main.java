@@ -14,7 +14,7 @@ public class Main {
         String hostname = InetAddress.getLocalHost().getHostName();
         List<Node> hostnodes = nodes.stream().filter(t -> t.hostname.equals(hostname)).toList();
         List<ServerProc> hostSeverProcs = new ArrayList<ServerProc>();
-        String storageFolder = "/Storage";
+        String storageFolder = "Storage";
         for (Node hn : hostnodes) {
             ServerProc sp = new ServerProc(hn.uid, hn.hostname, hn.port, storageFolder);
             for (Node n : nodes) {

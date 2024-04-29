@@ -88,7 +88,7 @@ public class ClientProc {
     private Socket connect(Node server) throws IOException {
         //System.out.println("Attempting to connect to " + server.hostname + ":" + server.port);
         Socket socket = new Socket(server.hostname, server.port);
-        socket.setSoTimeout(10000); // set a timeout of 1 second
+        //socket.setSoTimeout(10000); // set a timeout of 1 second
         //System.out.println("Connection Established");
         return socket;
     }
