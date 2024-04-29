@@ -1,0 +1,13 @@
+.DS_Store
+*.log
+*.tmp
+*.pyc
+*.swp
+*.swo
+*.out
+*.class
+# IDE specific files
+.idea/
+.vscode/
+#custom
+Storage/
