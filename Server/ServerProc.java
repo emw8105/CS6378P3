@@ -32,9 +32,9 @@ public class ServerProc {
         this.serverMap = new HashMap<>();
     }
 
-    public void addServer(int serverId, Node node) {
+    public void addServer(Node node) {
         if ( serverMap.size() < numServers ){
-            serverMap.put(serverId, node);
+            serverMap.put(node.uid, node);
         }
     }
 
@@ -239,5 +239,17 @@ public class ServerProc {
             serverSocket.close();
             executor.shutdown();
         }
+    }
+
+    public Thread run(){
+        Thread receiverThread = new Thread(() -> {
+            try {
+                this.startListening();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        });
+        receiverThread.start();
+        return receiverThread;
     }
 }
