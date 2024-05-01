@@ -30,7 +30,7 @@ for host, port in hosts.items():
     if currentHost == host:
         ssh_command = f"fuser -k {port}/tcp"
     else:
-        ssh_command = f"ssh {args.config}@{host} 'fuser -k {port}/tcp'"
+        ssh_command = f"ssh {args.userid}@{host} 'fuser -k {port}/tcp'"
     print(ssh_command)
     process = subprocess.Popen(ssh_command, shell=True)
     process.wait()  # Wait for the process to finish
