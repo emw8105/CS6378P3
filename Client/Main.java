@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import CS6378P3.Commons.ConfigReader;
 import CS6378P3.Commons.Node;
@@ -17,7 +18,7 @@ public class Main {
         int KEY_SIZE = 1000;
         String hostname = InetAddress.getLocalHost().getHostName();
         System.out.println("Spinning clients.."+hostname);
-        List<Node> hostnodes = clientList.stream().filter(t -> t.hostname.equals(hostname)).toList();
+        List<Node> hostnodes = clientList.stream().filter(t -> t.hostname.equals(hostname)).collect(Collectors.toList());
         List<ClientProc> hostClientProcs = new ArrayList<ClientProc>();
         for (Node hn : hostnodes) {
             ClientProc cp = new ClientProc(hn.uid, hn.hostname, hn.port);

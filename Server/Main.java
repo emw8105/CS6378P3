@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+
 
 import CS6378P3.Commons.ConfigReader;
 import CS6378P3.Commons.Node;
@@ -12,7 +14,7 @@ public class Main {
 
     public static List<Thread> spinHostServers(List<Node> nodes) throws Exception {
         String hostname = InetAddress.getLocalHost().getHostName();
-        List<Node> hostnodes = nodes.stream().filter(t -> t.hostname.equals(hostname)).toList();
+        List<Node> hostnodes = nodes.stream().filter(t -> t.hostname.equals(hostname)).collect(Collectors.toList());
         List<ServerProc> hostSeverProcs = new ArrayList<ServerProc>();
         String storageFolder = "Storage";
         for (Node hn : hostnodes) {

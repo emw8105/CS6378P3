@@ -35,7 +35,7 @@ for host in remotehosts:
         # need to cd to the server directory to run the server programs
         command = f"cd .. && java CS6378P3.Client.Main Launcher/{args.config}"
     else:
-        command = ( "ssh -f " + args.userid + "@" + host + " 'cd " + current_directory.removesuffix("Launcher")+ " && java CS6378P3.Server.Main Launcher/"+ args.config+ "'")
+        command = ( "ssh -f " + args.userid + "@" + host + " 'cd " + current_directory[:-len("Launcher")]+ " && java CS6378P3.Server.Main Launcher/"+ args.config+ "'")
     print(command)
     process = subprocess.Popen(command, shell=True)
     process.wait()
