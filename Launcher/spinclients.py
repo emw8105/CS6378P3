@@ -17,7 +17,7 @@ parser.add_argument("clientconfig", help="Path to client config file")
 args = parser.parse_args()
 
 # Open and read the config file
-with open(args.config, "r") as f:
+with open(args.clientconfig, "r") as f:
     lines = f.readlines()
     
 hosts = {}
@@ -34,7 +34,7 @@ remotehosts = list(hosts.keys())
 for host in remotehosts:
     if currentHost == host:
         # need to cd to the server directory to run the server programs
-        command = f"cd .. && java CS6378P3.Client.Main Launcher/{args.config}"
+        command = f"cd .. && java CS6378P3.Client.Main Launcher/{args.clientconfig}"
     else:
         command = ( "ssh -f " + args.userid + "@" + host + " 'cd " + current_directory[:-len("Launcher")]+ " && java CS6378P3.Client.Main Launcher/"+ args.serverconfig+" "+args.clientconfig+"'")
     print(command)
