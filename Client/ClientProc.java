@@ -26,25 +26,33 @@ package CS6378P3.Client;
 import java.io.*;
 import java.net.*;
 import java.util.*;
-import CS6378P3.Commons.*;
+
+import CS6378P3.Commons.Message;
+import CS6378P3.Commons.Node;
+import CS6378P3.Commons.MessageType;
+import CS6378P3.Commons.DFSUtils;
 
 public class ClientProc {
     private int uid;
     private String hostname;
     private int port;
     private Map<Integer, Node> serverMap = new HashMap<>();;
-    private final int numServers = 7;
-    private final String serverContactList = "servers.txt";
+    private final int NUM_SERVERS = 7;
+    private static final Boolean LOGGING = false;
+    private String logfile;
 
     public ClientProc(int uid, String hostname, int port) {
         this.uid = uid;
         this.hostname = hostname;
         this.port = port;
-        try {
-            // this.hostname = InetAddress.getLocalHost().getHostName(); // hostname may be passed in as an argument instead
-            //this.serverMap = readServerDetailsFromFile(serverContactList);
-        } catch (Exception e) {
-            e.printStackTrace();
+        this.logfile  = "logs/client"+uid+".txt";
+        DFSUtils.createFile(this.logfile);
+    }
+    private void logger(String logString) throws IOException{
+        if(LOGGING){
+            PrintWriter writer = new PrintWriter(new FileWriter(this.logfile, true));
+            writer.println(logString);
+            writer.close();
         }
     }
 
@@ -63,7 +71,7 @@ public class ClientProc {
     }
 
     public void addServer(Node node) {
-        if ( serverMap.size() < numServers ){
+        if ( serverMap.size() < NUM_SERVERS ){
             serverMap.put(node.uid, node);
         }
     }
@@ -72,11 +80,9 @@ public class ClientProc {
         return r;
     }
 
-
-
     // hash the key to determine which server to connect to
     private Node hash(String key, int offset) {
-        int serverNum = (Math.abs(key.hashCode()) + offset) % numServers; // need to change hash function to correlate the object to the server it belongs to
+        int serverNum = (Math.abs(key.hashCode()) + offset) % NUM_SERVERS; // need to change hash function to correlate the object to the server it belongs to
         Node server = serverMap.get(serverNum);
         if (server == null) {
             throw new RuntimeException("No server found for key: " + key);
@@ -115,7 +121,7 @@ public class ClientProc {
                 response = (Message)in.readObject(); // blocks until it receives a response or the timeout expires
                 socket.close();
                 if (response != null && response.messageType == MessageType.POS_ACK) {
-                    break; // if the response is not null and does not contain "ERROR", we have a successful response
+                    break; 
                 }
             } catch (IOException e) {
                 e.printStackTrace();
@@ -125,7 +131,7 @@ public class ClientProc {
         if (response == null) {
             throw new RuntimeException("Unable to read the key: " + key);
         }
-        return response.value;
+        return response.toString();
     }
 
     public MessageType set(String key, String value) throws IOException, ClassNotFoundException {
@@ -133,9 +139,11 @@ public class ClientProc {
         Socket socket = connect(destination); // connect to the server that the key hashes to
         ObjectOutputStream out = getWriter(socket);
         ObjectInputStream in  = getReader(socket);
-        Message message = new Message(uid, MessageType.CS_WRITE, key,value); // currently concatenating key and value
+        Message message = new Message(uid, MessageType.CS_WRITE, key,value);
         out.writeObject(message);
+        logger(message.toString());
         Message response = (Message)in.readObject(); // blocks until it receives a response
+        logger(response.toString());
         socket.close();
         return response.messageType;
     }
