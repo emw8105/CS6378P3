@@ -32,9 +32,8 @@ for line in lines:
 remotehosts = list(hosts.keys())
 for host in remotehosts:
     if currentHost == host:
-        # command = f"cd .. &&java Main Launcher/{args.config_file}"
         # need to cd to the server directory to run the server programs
-        command = f"java CS6378P3.Server.Main Launcher/{args.config}"
+        command = f"cd .. && java CS6378P3.Client.Main Launcher/{args.config}"
     else:
         command = ( "ssh -f " + args.userid + "@" + host + " 'cd " + current_directory.removesuffix("Launcher")+ " && java CS6378P3.Server.Main Launcher/"+ args.config+ "'")
     print(command)
