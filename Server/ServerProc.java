@@ -32,7 +32,7 @@ public class ServerProc {
     private int port;
     private Map<Integer, Node> serverMap;
     //private String replicaPath;
-    private static final int NUM_SERVERS = 7;
+    private static final int NUM_SERVERS = DFSUtils.NUM_SERVERS;
     private static final int NUM_PARTITIONS = 8;
     private static final Boolean LOGGING = false;
     private String logfile;

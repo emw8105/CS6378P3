@@ -5,6 +5,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 public class DFSUtils {
+    public static final int NUM_SERVERS = 7;
+    public static final int NUM_REPLICAS = 3;
+
     public static boolean createFile(String filePath) {
         System.out.println("creating: " + filePath);
         Path path = Paths.get(filePath);

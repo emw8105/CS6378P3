@@ -37,7 +37,7 @@ public class ClientProc {
     private String hostname;
     private int port;
     private Map<Integer, Node> serverMap = new HashMap<>();;
-    private final int NUM_SERVERS = 7;
+    private final int NUM_SERVERS = DFSUtils.NUM_SERVERS;
     private static final Boolean LOGGING = false;
     private String logfile;
 
