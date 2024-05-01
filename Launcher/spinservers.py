@@ -41,4 +41,3 @@ for host in remotehosts:
         command = ( "ssh -f " + args.userid + "@" + host + " 'cd " + current_directory[:-len("Launcher")]+ " && java CS6378P3.Server.Main Launcher/"+ args.config+ "'")
     print(command)
     process = subprocess.Popen(command, shell=True)
-    process.wait()
