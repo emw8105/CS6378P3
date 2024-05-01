@@ -11,7 +11,8 @@ current_directory = os.getcwd()
 # Define argument parser to accept config file
 parser = argparse.ArgumentParser()
 parser.add_argument("userid", help = "name of user(netid)")
-parser.add_argument("config", help="Path to configuration file")
+parser.add_argument("serverconfig", help="Path to server config file")
+parser.add_argument("clientconfig", help="Path to client config file")
 
 args = parser.parse_args()
 
@@ -35,6 +36,6 @@ for host in remotehosts:
         # need to cd to the server directory to run the server programs
         command = f"cd .. && java CS6378P3.Client.Main Launcher/{args.config}"
     else:
-        command = ( "ssh -f " + args.userid + "@" + host + " 'cd " + current_directory[:-len("Launcher")]+ " && java CS6378P3.Client.Main Launcher/"+ args.config+ "'")
+        command = ( "ssh -f " + args.userid + "@" + host + " 'cd " + current_directory[:-len("Launcher")]+ " && java CS6378P3.Client.Main Launcher/"+ args.serverconfig+" "+args.clientconfig+"'")
     print(command)
     process = subprocess.Popen(command, shell=True)
