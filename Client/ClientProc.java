@@ -107,7 +107,7 @@ public class ClientProc {
         return new ObjectInputStream(socket.getInputStream());
     }
 
-    public String get(String key) throws IOException, ClassNotFoundException {
+    public Message get(String key) throws IOException, ClassNotFoundException {
         Message response = null;
         int replica_try = 0;
         while (replica_try < 3) {
@@ -131,7 +131,7 @@ public class ClientProc {
         if (response == null) {
             throw new RuntimeException("Unable to read the key: " + key);
         }
-        return response.toString();
+        return response;
     }
 
     public MessageType set(String key, String value) throws IOException, ClassNotFoundException {

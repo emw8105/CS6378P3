@@ -10,6 +10,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import CS6378P3.Commons.ConfigReader;
+import CS6378P3.Commons.Message;
+import CS6378P3.Commons.MessageType;
 import CS6378P3.Commons.Node;
 
 public class Main {
@@ -45,7 +47,18 @@ public class Main {
 
         for (ClientProc hcp : hostClientProcs) {
             for (int i = 0; i < KEY_SIZE; i++) {
-                System.out.println(hcp.get(String.valueOf(i)));
+                MessageType mt = MessageType.NEG_ACK;
+                Message getResponse = null;
+                while(mt == MessageType.NEG_ACK){
+                    getResponse = hcp.get(String.valueOf(i));
+                    mt = getResponse.messageType;
+                }
+                try{
+                    System.out.println(getResponse.toString());
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+                
             }
         }
 
