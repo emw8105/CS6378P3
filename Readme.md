@@ -4,6 +4,7 @@
 ## Testing on Local
 **Compilation**
 ```
+cd CS6378P3
 javac -Xlint:unchecked -d . **/*.java 
 javac Server/Main.java  
 javac Client/Main.java 
