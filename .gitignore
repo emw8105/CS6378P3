@@ -10,4 +10,4 @@
 .idea/
 .vscode/
 #custom
-Storage/
+/logs

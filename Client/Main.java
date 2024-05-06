@@ -7,16 +7,20 @@ import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import CS6378P3.Commons.ConfigReader;
+import CS6378P3.Commons.Message;
+import CS6378P3.Commons.MessageType;
 import CS6378P3.Commons.Node;
 
 public class Main {
     // testing
     public static void spinClients(List<Node> serverList, List<Node> clientList) throws Exception {
-        System.err.println("Spinning clients..");
+        int KEY_SIZE = 1000;
         String hostname = InetAddress.getLocalHost().getHostName();
-        List<Node> hostnodes = clientList.stream().filter(t -> t.hostname.equals(hostname)).toList();
+        System.out.println("Spinning clients.."+hostname);
+        List<Node> hostnodes = clientList.stream().filter(t -> t.hostname.equals(hostname)).collect(Collectors.toList());
         List<ClientProc> hostClientProcs = new ArrayList<ClientProc>();
         for (Node hn : hostnodes) {
             ClientProc cp = new ClientProc(hn.uid, hn.hostname, hn.port);
@@ -25,10 +29,11 @@ public class Main {
             }
             hostClientProcs.add(cp);
         }
+        System.out.println(hostClientProcs.size());
         ExecutorService executor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         for (ClientProc hcp : hostClientProcs) {
             executor.submit(() -> {
-                for (int i = 0; i < 100; i++) {
+                for (int i = 0; i < KEY_SIZE; i++) {
                     try {
                         hcp.set(String.valueOf(i), String.valueOf((hcp.getuid() + 1) * i));
                     } catch (ClassNotFoundException e) {
@@ -39,19 +44,30 @@ public class Main {
                 }
             });
         }
+
+        for (ClientProc hcp : hostClientProcs) {
+            for (int i = 0; i < KEY_SIZE; i++) {
+                MessageType mt = MessageType.NEG_ACK;
+                Message getResponse = null;
+                while(mt == MessageType.NEG_ACK){
+                    getResponse = hcp.get(String.valueOf(i));
+                    mt = getResponse.messageType;
+                }
+                try{
+                    System.out.println(getResponse.toString());
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+                
+            }
+        }
+
         executor.shutdown();
         try {
             executor.awaitTermination(15, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-        for (ClientProc hcp : hostClientProcs) {
-            for (int i = 0; i < 100; i++) {
-                System.out.println(hcp.get(String.valueOf(i)));
-            }
-        }
-
     }
 
     public static void main(String[] args) throws IOException {

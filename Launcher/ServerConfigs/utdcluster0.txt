@@ -1,0 +1,9 @@
+# UID Hostname Port
+# shoudl start UIDs from 0
+0 dc01.utdallas.edu 6378
+1 dc02.utdallas.edu 6378
+2 dc03.utdallas.edu 6378
+3 dc04.utdallas.edu 6378
+4 dc05.utdallas.edu 6378
+5 dc06.utdallas.edu 6378
+6 dc07.utdallas.edu 6378
