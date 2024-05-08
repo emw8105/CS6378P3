@@ -1,9 +1,10 @@
-# Distributed File System for Fault tolerance 
+# Distributed File System for Fault tolerance (uses 2 Phase commit)
 
 
-## Tesing on Local
+## Testing on Local
 **Compilation**
 ```
+cd CS6378P3
 javac -Xlint:unchecked -d . **/*.java 
 javac Server/Main.java  
 javac Client/Main.java 
@@ -27,14 +28,14 @@ git clone https://github.com/PJAvinash/CS6378P3.git
 cd CS6378P3/Launcher
 ```
 
-**First spin up servers**
+**First spin-up servers**
 ```
 python3 spinservers.py <netid> ServerConfigs/utdcluster0.txt
 ```
-**spin up clients**
-Open an new terminal and Spin clients 
+**Spin up clients**
+Open a new terminal and Spin clients 
 - python3 spinclients.py <netid> <server_config_path> <client_config_path>
-- server_config_path &  client_config_path are relative paths from Launcher folder
+- server_config_path &  client_config_path are relative paths from the Launcher folder
 ```
  python3 spinclients.py <netid> ServerConfigs/utdcluster0.txt  ClientConfigs/utdcluster_0.txt
 ```
@@ -42,7 +43,7 @@ Open an new terminal and Spin clients
 - python3 freeports.py <netid> <client_config_path>
 - python3 freeports.py <netid> <server_config_path>
 
-**tested on linux and mac**
+**tested on Linux and mac**
 
 - java version "1.8.0_341"
 - Java(TM) SE Runtime Environment (build 1.8.0_341-b10)
