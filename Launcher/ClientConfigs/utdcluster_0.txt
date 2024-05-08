@@ -1,6 +1,6 @@
 # UID Hostname Port
-# shoudl start UIDs from 0
-# 21 concurrent clients
+# should start UIDs from 0
+# 20 concurrent clients
 0 dc11.utdallas.edu 7000
 1 dc12.utdallas.edu 7000
 2 dc13.utdallas.edu 7000
@@ -21,4 +21,3 @@
 17 dc28.utdallas.edu 7000
 18 dc29.utdallas.edu 7000
 19 dc30.utdallas.edu 7000
-20 dc31.utdallas.edu 7000
